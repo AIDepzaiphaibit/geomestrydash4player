@@ -5,21 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GeomestryDash4Players</title>
   <style type="text/css">
- .screen-container {
-	  display: grid;
-	  grid-template-columns: repeat(2, 1fr);
-	  grid-gap: 10px;
+.screen-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 10px;
   }
 
- .screen {
-	  background-color: #f0f0f0;
-	  padding: 100px;
-	  border: 1px solid #ddd;
-	  background-color: black;
-	  position: relative; 
+.screen {
+    background-color: #f0f0f0;
+    padding: 100px;
+    border: 1px solid #ddd;
+    background-color: black;
+    position: relative; 
   }
 
- .square {
+.square {
   width: 50px;
   height: 50px;
   background-color: white;
@@ -30,18 +30,18 @@
   z-index: 10; /* Nằm trên gai */
 }
 
- .square.falling {
-	  transform: rotate(90deg);
-	}
+.square.falling {
+    transform: rotate(90deg);
+  }
 
- .square.jump { 
-	  bottom: 100px; 
-	  transform: translateX(-50%); 
-	}
+.square.jump { 
+    bottom: 100px; 
+    transform: translateX(-50%); 
+  }
 
- .square.jump.falling { 
-	  transform: translateX(-50%) rotate(90deg); 
-	}
+.square.jump.falling { 
+    transform: translateX(-50%) rotate(90deg); 
+  }
 
 .spike {
   width: 0;
@@ -64,22 +64,22 @@
 </head>
 <body>
   <div class="screen-container">
-	<div class="screen screen-1">
-	  <div class="spike collision-area"></div>
-	  <div class="square" id="square1"></div>
-	</div>
-	<div class="screen screen-2">
-	  <div class="spike collision-area"></div>
-	  <div class="square" id="square2"></div>
-	</div>
-	<div class="screen screen-3">
-	  <div class="spike collision-area"></div>
-	  <div class="square" id="square3"></div>
-	</div>
-	<div class="screen screen-4">
-	  <div class="spike collision-area"></div>
-	  <div class="square" id="square4"></div>
-	</div>
+  <div class="screen screen-1">
+    <div class="spike collision-area"></div>
+    <div class="square" id="square1"></div>
+  </div>
+  <div class="screen screen-2">
+    <div class="spike collision-area"></div>
+    <div class="square" id="square2"></div>
+  </div>
+  <div class="screen screen-3">
+    <div class="spike collision-area"></div>
+    <div class="square" id="square3"></div>
+  </div>
+  <div class="screen screen-4">
+    <div class="spike collision-area"></div>
+    <div class="square" id="square4"></div>
+  </div>
   </div>
   <script>
   // Lấy các khối vuông
@@ -89,60 +89,71 @@
   const square4 = document.getElementById('square4');
 
   let rotateDegree = 0;
+  let isWin = false;
+  let deadPlayers = 0; 
 
   // Hàm xử lý nhảy cho khối vuông
   function jump(square) {
     const spike = square.parentElement.querySelector('.spike.collision-area');
     if (checkCollision(square, spike)) {
       square.parentElement.style.backgroundColor = 'white';
-      // Xử lý va chạm (dừng chuyển động, thay đổi màu nền, v.v.)
+      square.style.display = "none"; // ẩn khối vuông
+      deadPlayers++; // tăng số người chết
+      checkWin(); // kiểm tra xem có người thắng chưa
+    } else {
+      square.classList.add('jump'); 
+      let intervalId = setInterval(() => {
+        if (checkCollision(square, spike)) {
+          clearInterval(intervalId);
+        }
+      }, 1);
+      setTimeout(() => {
+        square.classList.add('falling');
+        rotateDegree += 90;
+        square.style.transform = `rotate(${rotateDegree}deg)`;
+      }, 100);
+      setTimeout(() => {
+        square.classList.remove('jump','falling');
+        square.style.transform = `rotate(${rotateDegree}deg)`;
+        checkWin(); // kiểm tra xem có người thắng chưa
+      }, 300);
     }
-    square.classList.add('jump'); 
-    let intervalId = setInterval(() => {
-      if (checkCollision(square, spike)) {
-        clearInterval(intervalId);
-      }
-    }, 1);
-    setTimeout(() => {
-      square.classList.add('falling');
-      rotateDegree += 90;
-      square.style.transform = `rotate(${rotateDegree}deg)`;
-    }, 100);
-    setTimeout(() => {
-      square.classList.remove('jump','falling');
-      square.style.transform = `rotate(${rotateDegree}deg)`;
-      checkWin(square);
-    }, 300);
   }
 
   // Xử lý sự kiện cho mỗi khối vuông
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'w') {
+    if (event.key === 'w' && square1.style.display != "none") {
       jump(square1);
-    } else if (event.key === 't') {
+    } else if (event.key === 't' && square2.style.display != "none") {
       jump(square2);
-    } else if (event.key === 'i') {
+    } else if (event.key === 'i' && square3.style.display != "none") {
       jump(square3);
-    } else if (event.key === 'p') {
+    } else if (event.key === 'p' && square4.style.display != "none") {
       jump(square4);
     }
   });
 
   // Hàm kiểm tra va chạm
   function checkCollision(square, spike) {
-	const squareRect = square.getBoundingClientRect();
-	const spikeRect = spike.getBoundingClientRect();
-	return (
-	  squareRect.bottom >= spikeRect.top && 
-	  squareRect.right >= spikeRect.left &&
-	  squareRect.left <= spikeRect.right
-	);
+  const squareRect = square.getBoundingClientRect();
+  const spikeRect = spike.getBoundingClientRect();
+  return (
+    squareRect.bottom >= spikeRect.top && 
+    squareRect.right >= spikeRect.left &&
+    squareRect.left <= spikeRect.right
+  );
   }
 
   // Hàm kiểm tra thắng
-  function checkWin(square) {
-    if (square.parentElement.classList.contains('screen-4')) {
-      alert(`Chúc mừng ${square.id} chiến thắng!`);
+  function checkWin() {
+    if (deadPlayers >= 3 && !isWin) { 
+      isWin = true; 
+      let winner = "";
+      if (square1.style.display != "none") { winner = "square1"; }
+      if (square2.style.display != "none") { winner = "square2"; }
+      if (square3.style.display != "none") { winner = "square3"; }
+      if (square4.style.display != "none") { winner = "square4"; }
+      alert(`Chúc mừng ${winner} chiến thắng!`); 
     }
   }
 
